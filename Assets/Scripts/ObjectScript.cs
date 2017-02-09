@@ -7,8 +7,12 @@ public class ObjectScript : MonoBehaviour
 {
 	public string[] types;
 	public bool isTargetObject = false;
+	[HideInInspector] public bool isInCorrectPosition = false;
 	[HideInInspector] public bool isHaloActive = false;
 	[HideInInspector] public bool targetHasBeenHit = false;
+
+	[HideInInspector] public Vector3 startPosition;
+	[HideInInspector] public Quaternion startRotation;
 	private GameObject mHaloObj;
 	private ScriptManager mScriptManager;
 
@@ -16,12 +20,23 @@ public class ObjectScript : MonoBehaviour
 	void Start ()
 	{
 		mScriptManager = GameObject.Find ("ScriptManagerObject").GetComponent<ScriptManager> ();
+		startPosition = transform.position;
+		startRotation = transform.rotation;
 	}
 	
 	// Update is called once per frame
 	void Update ()
 	{
 	
+	}
+
+	public void Reset ()
+	{
+		transform.position = startPosition;
+		transform.rotation = startRotation;
+		isHaloActive = false;
+		targetHasBeenHit = false;
+		isInCorrectPosition = false;
 	}
 
 	void OnMouseDown ()
