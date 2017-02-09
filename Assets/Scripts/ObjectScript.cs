@@ -1,18 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEditor;
 using System.Collections.Generic;
 
 public class ObjectScript : MonoBehaviour
 {
 	public string[] types;
 	public bool isTargetObject = false;
-	[HideInInspector] public bool isInCorrectPosition = false;
-	[HideInInspector] public bool isHaloActive = false;
-	[HideInInspector] public bool targetHasBeenHit = false;
+	public bool isInCorrectPosition = false;
+	public bool isHaloActive = false;
+	public bool targetHasBeenHit = false;
 
-	[HideInInspector] public Vector3 startPosition;
-	[HideInInspector] public Quaternion startRotation;
+	public Vector3 startPosition;
+	public Quaternion startRotation;
 	private GameObject mHaloObj;
 	private ScriptManager mScriptManager;
 
