@@ -45,7 +45,6 @@ public class ObjectScript : MonoBehaviour
 		} else {
 			mScriptManager.ObjectHit (gameObject);
 		}
-		isHaloActive = !isHaloActive;
 	}
 
 	void OnMouseEnter ()

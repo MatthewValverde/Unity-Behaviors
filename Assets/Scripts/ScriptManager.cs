@@ -1,13 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.Networking.Match;
 
+
+[AddComponentMenu ("Infinite Camera-Control/Mouse Orbit with zoom")]
 public class ScriptManager : MonoBehaviour
 {
-	public GameObject haloBlue;
-	public GameObject haloGreen;
-	public GameObject haloRed;
-	public GameObject haloYellow;
+	//public GameObject haloBlue;
+	//public GameObject haloGreen;
+	//public GameObject haloRed;
+	//public GameObject haloYellow;
 	public GameObject completeText;
 	public Text successCount;
 	public Text failCount;
@@ -16,7 +19,14 @@ public class ScriptManager : MonoBehaviour
 	public AudioSource successAudio;
 	public AudioSource failAudio;
 	public AudioSource completeAudio;
-	public float objectMoveSpeed = 9.0f;
+
+	public Material objectMaterial;
+	public Material objectOutlineMaterial;
+
+	public Material targetMaterial;
+	public Material targetOutlineOverMaterial;
+	public Material targetOutlineGreenMaterial;
+	public Material targetOutlineRedMaterial;
 
 	private GameObject mHaloBlue;
 	private GameObject mHaloGreen;
@@ -56,9 +66,38 @@ public class ScriptManager : MonoBehaviour
 	private float mRotationY = 0.0f;
 	private float rotationX = 0.0f;
 
+	public Transform cameraOrbitTarget;
+	public float cameraXSpeed = 6.0f;
+	public float cameraYSpeed = 6.0f;
+	public float cameraScrollSpeed = 6.0f;
+
+	float objectMoveSpeed = 21.0f;
+
+	float zoomMin = 1.0f;
+
+	float zoomMax = 30.0f;
+
+	float distance;
+
+	Vector3 position;
+
+	bool isActivated;
+
+
+
+	float x = 0.0f;
+
+	float y = 0.0f;
+
 	// Use this for initialization
 	void Start ()
 	{
+		Vector3 angles = transform.eulerAngles;
+
+		x = angles.y;
+
+		y = angles.x;
+
 		mCameraStartPostion = Camera.main.transform.position;
 		mCameraStartRotation = Camera.main.transform.localEulerAngles;
 		mRotationY = 0 - Camera.main.transform.localEulerAngles.x;
@@ -74,9 +113,9 @@ public class ScriptManager : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
-		if (mGameHasStarted) {
-			MoveCamera ();
-		}
+		//	if (mGameHasStarted) {
+		//MoveCamera ();
+		//}
 
 		if (mObjectMoving) {
 			float distCovered = (Time.time - mStartTime) * objectMoveSpeed;
@@ -90,6 +129,8 @@ public class ScriptManager : MonoBehaviour
 					mMoveItBack = false;
 				} else {
 					mObjectMoving = false;
+					mSelectedGameObject.GetComponent<Renderer> ().material = objectMaterial;
+					mSelectedTarget.GetComponent<Renderer> ().material = targetMaterial;
 					mSelectedGameObject = null;
 				}
 			}
@@ -125,46 +166,64 @@ public class ScriptManager : MonoBehaviour
 		if (!mGameHasStarted)
 			return;
 
+		if (mObjectMoving)
+			return;
+
+		Renderer rend = gameObjectOver.GetComponent<Renderer> ();
+		rend.material = targetOutlineOverMaterial;
+
 		ObjectScript objectScript = gameObjectOver.GetComponent<ObjectScript> ();
 		if (objectScript.targetHasBeenHit)
 			return;
 		
-		if (mHaloYellow == null) {
+		/*if (mHaloYellow == null) {
 			mHaloYellow = GameObject.Instantiate (haloYellow);
 		}
 		mHaloYellow.transform.parent = gameObjectOver.transform;
 		mHaloYellow.transform.position = gameObjectOver.transform.position;
-		mHaloYellow.SetActive (true);
+		mHaloYellow.SetActive (true);*/
 	}
 
 	public void ObjectOut (GameObject gameObjectOut)
 	{
 		if (!mGameHasStarted)
 			return;
-		
-		if (mHaloYellow != null) {
-			mHaloYellow.SetActive (false);
-		}
+
+		if (mObjectMoving)
+			return;
+
+		Renderer rend = gameObjectOut.GetComponent<Renderer> ();
+		rend.material = targetMaterial;
+
 	}
 
 	public void TargetHit (GameObject gameTargetHit)
 	{
-		if (!mGameHasStarted && mSelectedGameObject == null)
+		if (!mGameHasStarted)
+			return;
+
+		if (mSelectedGameObject == null)
+			return;
+
+		if (mObjectMoving)
 			return;
 		
 		ObjectScript objectScript = gameTargetHit.GetComponent<ObjectScript> ();
 		if (mSelectedTarget != null) {
-			ResetHalos ();
+			//ResetHalos ();
 			mSelectedTarget = null;
 		}
 
 		mSelectedTarget = gameTargetHit;
 
-		ObjectScript selectedGameObjectScript = mSelectedGameObject.GetComponent<ObjectScript> ();	
+		ObjectScript selectedGameObjectScript = mSelectedGameObject.GetComponent<ObjectScript> ();
+		if (selectedGameObjectScript == null)
+			return;
+
 		selectedGameObjectScript.isHaloActive = false;
-		mHaloBlue.SetActive (false);
+		//	mHaloBlue.SetActive (false);
 		ObjectOut (gameTargetHit);
-		GameObject halo;
+		//GameObject halo;
 
 		if (selectedGameObjectScript.types == null || objectScript.types == null) {
 			return;
@@ -181,24 +240,28 @@ public class ScriptManager : MonoBehaviour
 		}
 
 		if (isGood) {
-			if (mHaloGreen == null) {
-				mHaloGreen = GameObject.Instantiate (haloGreen);
-			}
-			halo =	mHaloGreen;
+			//if (mHaloGreen == null) {
+			//mHaloGreen = GameObject.Instantiate (haloGreen);
+			//	}
+			//	halo =	mHaloGreen;
+
+			mSelectedTarget.GetComponent<Renderer> ().material = targetOutlineGreenMaterial;
 			selectedGameObjectScript.isInCorrectPosition = true;
 			AddToSuccess ();
 		} else {
 			mMoveItBack = true;
-			if (mHaloRed == null) {
-				mHaloRed = GameObject.Instantiate (haloRed);
-			}
-			halo = mHaloRed;
+			//if (mHaloRed == null) {
+			//mHaloRed = GameObject.Instantiate (haloRed);
+			//}
+			//halo = mHaloRed;
+
+			mSelectedTarget.GetComponent<Renderer> ().material = targetOutlineRedMaterial;
 			AddToFail ();
 		}
 
-		halo.transform.parent = gameTargetHit.transform;
-		halo.transform.position = gameTargetHit.transform.position;
-		halo.SetActive (true);
+		//halo.transform.parent = gameTargetHit.transform;
+		//halo.transform.position = gameTargetHit.transform.position;
+		//halo.SetActive (true);
 
 		ResetMoveVariables (mSelectedGameObject.transform.position, mSelectedTarget.transform.position);
 		ResetRotateVariables (mSelectedGameObject.transform.rotation, mSelectedTarget.transform.rotation);
@@ -211,40 +274,53 @@ public class ScriptManager : MonoBehaviour
 		if (!mGameHasStarted) {
 			return;
 		}
+			
+		if (mObjectMoving)
+			return;
 		
 		ObjectScript objectScript = gameObjectHit.GetComponent<ObjectScript> ();
-		if (objectScript.isInCorrectPosition || mObjectMoving) {
+		if (objectScript.isInCorrectPosition) {
 			return;
 		}
 
-		ResetHalos ();
+		gameObjectHit.GetComponent<Renderer> ().material = objectOutlineMaterial;
+
+		//	ResetHalos ();
 
 		if (!objectScript.isHaloActive) {
-			if (mHaloBlue == null) {
-				mHaloBlue = GameObject.Instantiate (haloBlue);
-			}
-			mHaloBlue.transform.parent = gameObjectHit.transform;
-			mHaloBlue.transform.position = gameObjectHit.transform.position;
-			mHaloBlue.SetActive (true);
+			//if (mHaloBlue == null) {
+			//mHaloBlue = GameObject.Instantiate (haloBlue);
+			//	}
+			//mHaloBlue.transform.parent = gameObjectHit.transform;
+			//mHaloBlue.transform.position = gameObjectHit.transform.position;
+			//mHaloBlue.SetActive (true);
 
 			if (mSelectedGameObject != null) {
 				ObjectScript selectedGameObjectScript = mSelectedGameObject.GetComponent<ObjectScript> ();
 				selectedGameObjectScript.isHaloActive = false;
+				mSelectedGameObject.GetComponent<Renderer> ().material = objectMaterial;
 			}
 
 			mSelectedGameObject = gameObjectHit;
+
+			objectScript.isHaloActive = true;
 		} else {
-			mHaloBlue.SetActive (false);
-			mSelectedGameObject = null;
+			//	mHaloBlue.SetActive (false);
+			if (mSelectedGameObject != null) {
+				ObjectScript selectedGameObjectScript = mSelectedGameObject.GetComponent<ObjectScript> ();
+				selectedGameObjectScript.isHaloActive = false;
+				mSelectedGameObject.GetComponent<Renderer> ().material = objectMaterial;
+				mSelectedGameObject = null;
+			}
 		}
 	}
 
 	public void ResetHalos ()
 	{
-		if (mHaloGreen != null)
-			mHaloGreen.SetActive (false);
-		if (mHaloRed != null)
-			mHaloRed.SetActive (false);
+		//	if (mHaloGreen != null)
+		//mHaloGreen.SetActive (false);
+		//if (mHaloRed != null)
+		//mHaloRed.SetActive (false);
 	}
 
 	private void AddToSuccess ()
@@ -294,8 +370,12 @@ public class ScriptManager : MonoBehaviour
 		if (mRunTimer) {
 			mTimerCounter++;
 
+			int minutes = Mathf.FloorToInt (mTimerCounter / 60F);
+			int seconds = Mathf.FloorToInt (mTimerCounter - minutes * 60);
+			string niceTime = string.Format ("{0:0}:{1:00}", minutes, seconds);
+
 			if (timerDisplay != null) {
-				timerDisplay.text = mTimerCounter.ToString ();
+				timerDisplay.text = niceTime;
 			}
 			Invoke ("RunTimer", 1.0f);
 		}
@@ -305,7 +385,7 @@ public class ScriptManager : MonoBehaviour
 	{
 		CancelInvoke ("ResetScene");
 		mTimerCounter = 0;
-		timerDisplay.text = "0";
+		timerDisplay.text = "0:00";
 		failCount.text = "0";
 		successCount.text = "0";
 		mGameHasStarted = false;
@@ -314,7 +394,7 @@ public class ScriptManager : MonoBehaviour
 		Camera.main.transform.position = mCameraStartPostion;
 		Camera.main.transform.localEulerAngles = mCameraStartRotation;
 
-		ResetHalos ();
+		//ResetHalos ();
 
 		if (startButton != null) {
 			startButton.SetActive (true);
@@ -327,8 +407,13 @@ public class ScriptManager : MonoBehaviour
 		GameObject[] gameObjects = GameObject.FindObjectsOfType<GameObject> ();
 		for (int i = 0; i < gameObjects.Length; i++) {
 			ObjectScript objScript = gameObjects [i].GetComponent<ObjectScript> ();
-			if (objScript != null && !objScript.isTargetObject) {
-				objScript.Reset ();
+			if (objScript != null) {
+				if (!objScript.isTargetObject) {
+					objScript.Reset ();
+					gameObjects [i].GetComponent<Renderer> ().material = objectMaterial;
+				} else {
+					gameObjects [i].GetComponent<Renderer> ().material = targetMaterial;
+				}
 			}
 		}
 	}
@@ -357,13 +442,76 @@ public class ScriptManager : MonoBehaviour
 			Camera.main.transform.position += Vector3.down * speed * Time.deltaTime;
 		}
 
-		if (Input.GetMouseButton (1)) {
+		/*if (Input.GetMouseButton (1)) {
 			rotationX += Input.GetAxis ("Mouse X") * sensX * Time.deltaTime;
 			mRotationY += Input.GetAxis ("Mouse Y") * sensY * Time.deltaTime;
 			mRotationY = Mathf.Clamp (mRotationY, minY, maxY);
 			Camera.main.transform.localEulerAngles = new Vector3 (-mRotationY, rotationX, 0);
-		}
-			
+		}*/			
 	}
 
+
+	void LateUpdate ()
+	{
+		if (!mGameHasStarted)
+			return;
+
+		MoveCamera ();
+
+		// only update if the mousebutton is held down
+		if (Input.GetMouseButtonDown (1)) {
+			isActivated = true;
+		} 
+
+		// if mouse button is let UP then stop rotating camera
+		if (Input.GetMouseButtonUp (1)) {
+			isActivated = false;
+		} 
+			
+		if (cameraOrbitTarget && isActivated) { 
+			//  get the distance the mouse moved in the respective direction
+			x += Input.GetAxis ("Mouse X") * cameraXSpeed;
+			y -= Input.GetAxis ("Mouse Y") * cameraYSpeed;	 
+
+			// when mouse moves left and right we actually rotate around local y axis	
+			Camera.main.transform.RotateAround (cameraOrbitTarget.position, Camera.main.transform.up, x);
+
+			// when mouse moves up and down we actually rotate around the local x axis	
+			Camera.main.transform.RotateAround (cameraOrbitTarget.position, Camera.main.transform.right, y);
+
+			// reset back to 0 so it doesn't continue to rotate while holding the button
+			x = 0;
+			y = 0; 	
+
+		} else {		
+
+			// see if mouse wheel is used 	
+			if (Input.GetAxis ("Mouse ScrollWheel") != 0) {	
+
+				// get the distance between camera and target
+				distance = Vector3.Distance (Camera.main.transform.position, cameraOrbitTarget.position);	
+
+				// get mouse wheel info to zoom in and out	
+				distance = ZoomLimit (distance - Input.GetAxis ("Mouse ScrollWheel") * cameraScrollSpeed, zoomMin, zoomMax);
+
+				// position the camera FORWARD the right distance towards target
+				position = -(Camera.main.transform.forward * distance) + cameraOrbitTarget.position;
+
+				// move the camera
+				Camera.main.transform.position = position; 
+			}
+		}
+	}
+
+	public static float ZoomLimit (float dist, float min, float max)
+	{
+
+		if (dist < min)
+			dist = min;
+
+		if (dist > max)
+			dist = max; 
+
+		return dist;
+	}
 }
