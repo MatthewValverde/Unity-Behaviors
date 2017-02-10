@@ -130,7 +130,7 @@ public class ScriptManager : MonoBehaviour
 				} else {
 					mObjectMoving = false;
 					mSelectedGameObject.GetComponent<Renderer> ().material = objectMaterial;
-					mSelectedTarget.GetComponent<Renderer> ().material = targetMaterial;
+					//mSelectedTarget.GetComponent<Renderer> ().material = targetMaterial;
 					mSelectedGameObject = null;
 				}
 			}
@@ -139,6 +139,8 @@ public class ScriptManager : MonoBehaviour
 
 	public void StartGame ()
 	{
+		ResetScene();
+
 		if (startButton != null) {
 			startButton.SetActive (false);
 		}
@@ -355,8 +357,9 @@ public class ScriptManager : MonoBehaviour
 				completeText.SetActive (true);
 				if (completeAudio != null) {
 					completeAudio.Play ();
-					Invoke ("ResetScene", 3.0f);
+					Invoke ("ShowStartButton", 5.0f);
 					mRunTimer = false;
+					mGameHasStarted = false;
 					CancelInvoke ("RunTimer");
 				}
 			}
@@ -381,21 +384,8 @@ public class ScriptManager : MonoBehaviour
 		}
 	}
 
-	private void ResetScene ()
+	private void ShowStartButton ()
 	{
-		CancelInvoke ("ResetScene");
-		mTimerCounter = 0;
-		timerDisplay.text = "0:00";
-		failCount.text = "0";
-		successCount.text = "0";
-		mGameHasStarted = false;
-		mGreenPoints = 0;
-		mRedPoints = 0;
-		Camera.main.transform.position = mCameraStartPostion;
-		Camera.main.transform.localEulerAngles = mCameraStartRotation;
-
-		//ResetHalos ();
-
 		if (startButton != null) {
 			startButton.SetActive (true);
 		}
@@ -403,6 +393,21 @@ public class ScriptManager : MonoBehaviour
 		if (completeText != null) {
 			completeText.SetActive (false);
 		}
+	}
+
+	private void ResetScene ()
+	{
+		CancelInvoke ("ResetScene");
+		mTimerCounter = 0;
+		timerDisplay.text = "0:00";
+		failCount.text = "0";
+		successCount.text = "0";
+		mGreenPoints = 0;
+		mRedPoints = 0;
+		Camera.main.transform.position = mCameraStartPostion;
+		Camera.main.transform.localEulerAngles = mCameraStartRotation;
+
+		//ResetHalos ();
 
 		GameObject[] gameObjects = GameObject.FindObjectsOfType<GameObject> ();
 		for (int i = 0; i < gameObjects.Length; i++) {
