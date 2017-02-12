@@ -459,6 +459,14 @@ public class ManagerScript : MonoBehaviour
 		if (!mGameHasStarted)
 			return;
 
+		// Pan the camera
+		float moveSpeed = 0.5f;
+		if ((Input.GetKey (KeyCode.LeftShift) || Input.GetKey (KeyCode.RightShift)) && Input.GetMouseButton (1)) {
+			Camera.main.transform.Translate (Vector3.right * -Input.GetAxis ("Mouse X") * moveSpeed);
+			Camera.main.transform.Translate (Camera.main.transform.up * -Input.GetAxis ("Mouse Y") * moveSpeed, Space.World);
+			return;
+		}
+
 		MoveCamera ();
 
 		// only update if the mousebutton is held down
