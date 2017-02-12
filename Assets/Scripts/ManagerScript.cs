@@ -38,6 +38,9 @@ public class ManagerScript : MonoBehaviour
 	// speed that object moves to target
 	public float objectMoveSpeedToTarget = 21.0f;
 
+	// flag the ability to use Keyboards Keys to control camera movements.
+	public bool enableCameraMovementsViaKeys = true;
+
 	// GameObject temp holders
 	private GameObject[] mMovableObjects;
 	private GameObject mSelectedGameObject;
@@ -412,8 +415,7 @@ public class ManagerScript : MonoBehaviour
 		mRedPoints = 0;
 
 		// reseting camera to default position
-		Camera.main.transform.position = mCameraStartPostion;
-		Camera.main.transform.localEulerAngles = mCameraStartRotation;
+		ResetCameraPosition();
 
 		// reseting game objects to their positions and the materials for both target and movable object.
 		GameObject[] gameObjects = GameObject.FindObjectsOfType<GameObject> ();
@@ -433,6 +435,14 @@ public class ManagerScript : MonoBehaviour
 	// moving the camera with key commands
 	private void MoveCamera ()
 	{
+		// Reset camera position
+		if (Input.GetKey (KeyCode.R)) {
+			ResetCameraPosition();
+		}
+
+		// a flag to allow or disallow camera movements with Keys
+		if(!enableCameraMovementsViaKeys) return;
+
 		if (Input.GetKey (KeyCode.A)) {
 			Camera.main.transform.position += Vector3.right * mSpeed * Time.deltaTime;
 		}
@@ -524,5 +534,11 @@ public class ManagerScript : MonoBehaviour
 			dist = max; 
 
 		return dist;
+	}
+
+	// reseting camera to default position
+	void ResetCameraPosition(){
+		Camera.main.transform.position = mCameraStartPostion;
+		Camera.main.transform.localEulerAngles = mCameraStartRotation;
 	}
 }
